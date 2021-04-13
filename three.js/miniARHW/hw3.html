@@ -344,6 +344,10 @@ function onTouchStart (event) {
     
     
 function onTouchEnd (event) {
-    down = !down;
+    console.log ('in touch end')
+	event.preventDefault();
+    if(down){
+        down = !down;
+    }
 }
 </script></body>
