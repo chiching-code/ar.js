@@ -54,7 +54,7 @@ var button1;
 
 var group;
 var angle = 0;
-var isAction = false;
+var down = false;
 var omega = 0;
        
 init();
@@ -159,6 +159,7 @@ function init() {
 	}
 	if (_iOSDevice) {
     	window.addEventListener('touchstart', onTouchStart, false);
+        window.addEventListener('touchend', onTouchEnd, false);
     	// touchend ... use the same callback as mouseup
 	} else {
 		window.addEventListener ('mousedown', onMouseDown, false);
@@ -262,7 +263,8 @@ function animate() {
     button1.mesh.material.visible = markerHiro.visible;
     
     renderer.render (sceneHUD, cameraHUD);
-    if(isAction){
+    
+    if(down){
         omega = omega + 5*dt;
         
     }else{
@@ -271,6 +273,7 @@ function animate() {
     omega = clamp (omega, 0, maxOmega);
     
     angle += omega*dt;
+    
     var aa = angle % (Math.PI*2);
     if( aa >= 0  && aa < 2.1 ){//Math.PI*2/3
         $('#text').text('blue');
@@ -284,6 +287,7 @@ function animate() {
         $('#text').text('green');
          $('#text').css ('color', 'green'); 
     }
+    
     markerHiro.children[1].position.set(1.12 * Math.sin(angle), 0.05,-1.12 * Math.cos(angle));
     markerHiro.children[1].rotation.z = angle;
     
@@ -302,7 +306,7 @@ function pickCompute (ndcX, ndcY) {
 	
 	if (dist < button1.size) {  // distance VS. radius
 		console.log ('picked')
-		isAction = !isAction;
+        down = true;
 	} else {
 		console.log ('no hit')
 	}
@@ -321,8 +325,7 @@ function onMouseDown (event) {
 	let ndcY = -(event.clientY / window.innerHeight) * 2 + 1;
 
 	pickCompute (ndcX, ndcY);	
-	
-	down = true;
+
 }	
 
 function onTouchStart (event) {
@@ -338,5 +341,10 @@ function onTouchStart (event) {
 		
 	}	
 }
-
+    
+    
+function onTouchEnd (event) {
+    event.preventDefault();
+    down = !down;
+}
 </script></body>
