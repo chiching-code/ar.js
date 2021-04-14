@@ -227,14 +227,20 @@ function addMarkerHiro(){
     group.rotation.x = -Math.PI/2;
     
     
-
+    let light = new THREE.PointLight( 0xffffff, 1);
+    scene.add( light );
     
+    var point = new THREE.Group();
     var geometry3 = new THREE.CircleGeometry( 0.5, 128 ,4.65,0.3);
-    var material3 = new THREE.MeshBasicMaterial( { color: 0x000000 , side: THREE.DoubleSide} );
+    var material3 = new THREE.MeshPhongMaterial( { side: THREE.DoubleSide,color:0x8048a1} );
     var circle3 = new THREE.Mesh( geometry3, material3 );
-    markerRoot.add( circle3 );
-    circle3.rotation.x = Math.PI/2;
-    circle3.rotation.z = -Math.PI;
+    var geometry4 = new THREE.CircleGeometry( 0.35, 128 ,4.65,0.3);
+    var material4 = new THREE.MeshPhongMaterial( { side: THREE.DoubleSide,color:0xfaf88e} );
+    var circle4 = new THREE.Mesh( geometry4, material4 );
+    point.add(circle3,circle4);
+    point.rotation.x = Math.PI/2;
+    point.rotation.z = -Math.PI;
+    markerRoot.add( point );
 	return markerRoot;
 }
     
