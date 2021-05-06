@@ -14,9 +14,9 @@
 <a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a>
 	 - three.js<br>
 Minimal Version<br><br>
-    <p id="text" style ="color:black ;font-size:25px">which color:</p>
+    <p id="text" style ="color:black ;font-size:25px">Target</p>
 </div>
-
+<script src="explode.js"></script>
 <script>
 
 class Button {
@@ -45,7 +45,7 @@ class Button {
 // global variables
 var renderer, scene;
 var camera, sceneHUD, cameraHUD;
-//var arToolKitSource, arToolKitContext;
+var arToolKitSource, arToolKitContext;
 var markerHiro;
 var markerRoot;
 var stats;
@@ -56,7 +56,11 @@ var group;
 var angle = 0;
 var down = false;
 var omega = 0;
-       
+    
+var mouse = new THREE.Vector2();
+var raycaster = new THREE.Raycaster();
+var pickables = [];
+    
 init();
 animate();
 
@@ -184,6 +188,7 @@ function init() {
 
 	markerHiro = addMarkerHiro();
 	scene.add (markerHiro);
+    initSprite(markerHiro);
 }
 	
 function addMarkerHiro(){
@@ -191,7 +196,7 @@ function addMarkerHiro(){
 
 	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
 		type : 'pattern',
-		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bombMarker.patt'
 	})
 
   /*// add a torus knot & a transparent box	
@@ -205,51 +210,30 @@ function addMarkerHiro(){
 				new THREE.MeshNormalMaterial({transparent:true, opacity:0.3}));
 	mesh.position.y	= 0.5
 	markerRoot.add (mesh); */
-	group = new THREE.Group();
-   
-    let geometry0 = new THREE.CircleGeometry( 1.62, 32, Math.PI/2,2*Math.PI/3);
-    let material0 = new THREE.MeshBasicMaterial( { color: 0xb2e368, side: THREE.DoubleSide} );
-    let circle0 = new THREE.Mesh( geometry0, material0 );
-    group.add( circle0 );  
-
-    let geometry1 = new THREE.CircleGeometry( 1.62, 32, Math.PI/2 + 2/3*Math.PI, 
-    2*Math.PI/3);
-    let material1 = new THREE.MeshBasicMaterial( { color: 0xe35d5d, side: THREE.DoubleSide } );
-    let circle1 = new THREE.Mesh( geometry1, material1 );
-    group.add( circle1 );  
-
-    let geometry2 = new THREE.CircleGeometry( 1.62, 32, Math.PI/2 - 2/3*Math.PI, 
-    2*Math.PI/3);
-    let material2 = new THREE.MeshBasicMaterial( { color: 0x668cff, side: THREE.DoubleSide } );
-    let circle2 = new THREE.Mesh( geometry2, material2 );
-    group.add( circle2 );
-    markerRoot.add(group);
-    group.rotation.x = -Math.PI/2;
-    
-    
-    let light = new THREE.PointLight( 0xffffff, 1);
-    scene.add( light );
-    
-    var point = new THREE.Group();
-    var geometry3 = new THREE.CircleGeometry( 0.5, 128 ,4.65,0.3);
-    var material3 = new THREE.MeshPhongMaterial( { side: THREE.DoubleSide,color:0x8048a1} );
-    var circle3 = new THREE.Mesh( geometry3, material3 );
-    var geometry4 = new THREE.CircleGeometry( 0.35, 128 ,4.65,0.3);
-    var material4 = new THREE.MeshPhongMaterial( { side: THREE.DoubleSide,color:0xfaf88e} );
-    var circle4 = new THREE.Mesh( geometry4, material4 );
-    point.add(circle3,circle4);
-    point.rotation.x = Math.PI/2;
-    point.rotation.z = -Math.PI;
-    markerRoot.add( point );
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin('')
+	let texture = loader.load( 'https://i.imgur.com/Pd8xXaM.png' );
+	
+	let material = new THREE.MeshBasicMaterial( { 
+		map: texture,
+		transparent: true,
+		side: THREE.DoubleSide
+		} );
+	let geometry	= new THREE.PlaneGeometry(1,1);
+	let mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= geometry.parameters.height/2;
+    mesh.rotation.x = Math.PI/2;
+	let target = new THREE.Object3D();
+	target.add (mesh);
+	markerRoot.add (target);
+	
+	/// add gridhelper
+	/*var gridXZ = new THREE.GridHelper(1,10);
+    markerRoot.add( gridXZ );*/
 	return markerRoot;
 }
     
 
-function clamp (x, xLo, xHi) {
-	if (x < xLo) return xLo;
-    if (x > xHi) return xHi;
-    else return x;
-}
     
 function animate() {
 	requestAnimationFrame (animate);
@@ -263,40 +247,22 @@ function animate() {
     renderer.clear();
 	renderer.render (scene, camera);
     
-    var dt = 0.2;
-    var maxOmega = 10;
     
     button1.mesh.material.visible = markerHiro.visible;
     
     renderer.render (sceneHUD, cameraHUD);
     
-    if(down){
-        omega = omega + 5*dt;
-        
-    }else{
-        omega = omega - dt;
-    }
-    omega = clamp (omega, 0, maxOmega);
-    
-    angle += omega*dt;
-    
-    var aa = angle % (Math.PI*2);
-    if( aa >= 0  && aa < 2.1 ){//Math.PI*2/3
-        $('#text').text('blue');
-        $('#text').css ('color', 'blue'); 
-    }
-    else if(aa >= 2.1 && aa < 4.2){//Math.PI*2/3、Math.PI*2*2/3
-        $('#text').text('red');
-         $('#text').css ('color', 'red'); 
-    }
-    else if(aa >= 4.2 && aa < 6.3){//Math.PI*2*2/3、Math.PI/2
-        $('#text').text('green');
-         $('#text').css ('color', 'green'); 
-    }
-    
-    markerHiro.children[1].position.set(1.12 * Math.sin(angle), 0.05,-1.12 * Math.cos(angle));
-    markerHiro.children[1].rotation.z = angle;
-    
+    let localCamera = markerHiro.worldToLocal (new THREE.Vector3(0,0,0))
+	// CYLINDRICAL billboard:
+	localCamera.y = 0;
+	
+	// to rotate (0,0,1) to localCamera [markerCoord]
+	let point = new THREE.Vector3(0,0,1);
+	let angle = point.angleTo (localCamera);
+	let axis = new THREE.Vector3();
+	axis.crossVectors(point, localCamera).normalize(); // normalization is IMPORTANT!
+	let target = markerHiro.children[0];
+	target.quaternion.setFromAxisAngle (axis, angle);
     //renderer.render (scene, camera);
 		
 }
@@ -311,9 +277,11 @@ function pickCompute (ndcX, ndcY) {
 	$('#touch').text ( `[${printStr[0]}]: (${printStr[1]}, ${printStr[2]})`);
 	
 	if (dist < button1.size) {  // distance VS. radius
+        setTimeout (spriteAnimate, 0);
 		console.log ('picked')
-        down = true;
+        
 	} else {
+        
 		console.log ('no hit')
 	}
 
@@ -321,7 +289,6 @@ function pickCompute (ndcX, ndcY) {
 
 function onMouseUp (event) {
 	// do nothing yet ...
-	down = false;
 }
 
 function onMouseDown (event) {
@@ -330,7 +297,8 @@ function onMouseDown (event) {
 	let ndcX = (event.clientX / window.innerWidth) * 2 - 1;
 	let ndcY = -(event.clientY / window.innerHeight) * 2 + 1;
 
-	pickCompute (ndcX, ndcY);	
+	pickCompute (ndcX, ndcY);
+    
 
 }	
 
@@ -352,8 +320,9 @@ function onTouchStart (event) {
 function onTouchEnd (event) {
     console.log ('in touch end')
 	event.preventDefault();
-    if(down){
-        down = !down;
-    }
+
+
 }
+    
+
 </script></body>
